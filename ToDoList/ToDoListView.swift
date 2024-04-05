@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct ToDoListView: View {
+    @State private var sheetIsPresented = false
+
     var toDos = [
         "Learn Swift",
         "Build Apps", 
@@ -25,11 +27,28 @@ struct ToDoListView: View {
                     } label: {
                         Text(toDo)
                     }
+                    .font(.title2)
                 }
             }
             .navigationTitle("To Do List")
             .navigationBarTitleDisplayMode(.automatic)
             .listStyle(.plain)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        sheetIsPresented.toggle()
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+
+                }
+            }
+            .sheet(isPresented: $sheetIsPresented) {
+                DetailView(passedValue: "")
+            }
+//            .fullScreenCover(isPresented: $sheetIsPresented) {
+//                DetailView(passedValue: "")
+//            }
         }
     }
 }
