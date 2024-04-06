@@ -9,62 +9,62 @@ import SwiftUI
 
 struct DetailView: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var toDo = ""
-    @State private var reminderIsOn = false
-    @State private var dueDate = Date.now + (60*60*24)
-    @State private var notes = ""
-    @State private var isCompleted = false
-
-    var passedValue: String
-
+    @EnvironmentObject var toDosVM: ToDosViewModel
+    
+    @State var toDo: ToDo
+    
+    var newToDo = false
+    
     var body: some View {
-        NavigationStack {
-            List {
-                TextField("Enter ToDo here", text: $toDo)
-                    .font(.title)
-                    .textFieldStyle(.roundedBorder)
-                    .padding(.vertical)
-                    .listRowSeparator(.hidden)
-                
-                Toggle("Set Reminder", isOn: $reminderIsOn)
-                    .padding(.top)
-                    .listRowSeparator(.hidden)
-                
-                DatePicker("Date", selection: $dueDate)
-                    .listRowSeparator(.hidden)
-                    .padding(.bottom)
-                    .disabled(!reminderIsOn)
-                
-                Text("Notes:")
-                    .padding(.top)
-                
-                TextField("Notes", text: $notes, axis: .vertical)
-                    .textFieldStyle(.roundedBorder)
-                    .listRowSeparator(.hidden)
-                
-                Toggle("Completed", isOn: $isCompleted)
-                    .padding(.top)
-                    .listRowSeparator(.hidden)
+        List {
+            TextField("Enter ToDo here", text: $toDo.item)
+                .font(.title)
+                .textFieldStyle(.roundedBorder)
+                .padding(.vertical)
+                .listRowSeparator(.hidden)
+            
+            Toggle("Set Reminder", isOn: $toDo.reminderIsOn)
+                .padding(.top)
+                .listRowSeparator(.hidden)
+            
+            DatePicker("Date", selection: $toDo.dueDate)
+                .listRowSeparator(.hidden)
+                .padding(.bottom)
+                .disabled(!toDo.reminderIsOn)
+            
+            Text("Notes:")
+                .padding(.top)
+            
+            TextField("Notes", text: $toDo.notes, axis: .vertical)
+                .textFieldStyle(.roundedBorder)
+                .listRowSeparator(.hidden)
+            
+            Toggle("Completed", isOn: $toDo.isCompleted)
+                .padding(.top)
+                .listRowSeparator(.hidden)
+        }
+        .listStyle(.plain)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("Cancel") {
+                    dismiss()
+                }
             }
-            .listStyle(.plain)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("Save") {
+                    if newToDo {
+                        toDosVM.toDos.append(toDo)
                         dismiss()
                     }
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        //TODO: Add Save code here
-                    }
-                }
             }
-            .navigationBarBackButtonHidden()
-            .navigationBarTitleDisplayMode(.inline)
         }
+        .navigationBarBackButtonHidden()
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
 #Preview {
-    DetailView(passedValue: "Item 1")
+    DetailView(toDo: ToDo())
+        .environmentObject(ToDosViewModel())
 }
