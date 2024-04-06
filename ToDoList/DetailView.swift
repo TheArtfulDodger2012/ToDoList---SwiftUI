@@ -13,8 +13,6 @@ struct DetailView: View {
     
     @State var toDo: ToDo
     
-    var newToDo = false
-    
     var body: some View {
         List {
             TextField("Enter ToDo here", text: $toDo.item)
@@ -52,10 +50,8 @@ struct DetailView: View {
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Save") {
-                    if newToDo {
-                        toDosVM.toDos.append(toDo)
-                        dismiss()
-                    }
+                    toDosVM.saveToDo(toDo: toDo)
+                    dismiss()
                 }
             }
         }

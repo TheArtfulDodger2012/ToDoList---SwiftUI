@@ -16,30 +16,38 @@ struct ToDoListView: View {
         NavigationStack {
             List {
                 ForEach(toDosVM.toDos) { toDo in
-                    NavigationLink {
-                        DetailView(toDo: ToDo())
-                    } label: {
-                        Text(toDo.item)
+                    HStack {
+                        Image(systemName: toDo.isCompleted ? "checkmark.rectangle" : "rectangle")
+                        
+                        NavigationLink {
+                            DetailView(toDo: toDo)
+                        } label: {
+                            Text(toDo.item)
+                        }
                     }
                     .font(.title2)
                 }
+                .onDelete(perform: toDosVM.deleteToDo)
+                .onMove  (perform: toDosVM.moveToDo)
             }
             .navigationTitle("To Do List")
             .navigationBarTitleDisplayMode(.automatic)
             .listStyle(.plain)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    EditButton()
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         sheetIsPresented.toggle()
                     } label: {
                         Image(systemName: "plus")
                     }
-
                 }
             }
             .sheet(isPresented: $sheetIsPresented) {
                 NavigationStack {
-                    DetailView(toDo: ToDo(), newToDo: true)
+                    DetailView(toDo: ToDo())
                 }
             }
 //            .fullScreenCover(isPresented: $sheetIsPresented) {
