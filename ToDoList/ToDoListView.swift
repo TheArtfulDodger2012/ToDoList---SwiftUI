@@ -6,18 +6,44 @@
 //
 
 import SwiftUI
+import SwiftData
 
-struct ToDoListView: View {
-    @EnvironmentObject var toDosVM: ToDosViewModel
+enum SortOption: String, CaseIterable {
+    case asEntered     = "As Entered"
+    case alphabetical  = "A-Z"
+    case chronological = "Date"
+    case completed     = "Not Done"
+}
 
-    @State private var sheetIsPresented = false
-
+struct sortedToDoList: View {
+    @Query var toDos: [ToDo]
+    @Environment(\.modelContext) var modelContext
+    
+    let sortSelection: SortOption
+    
+    init(sortSelection: SortOption) {
+        self.sortSelection = sortSelection
+        switch self.sortSelection {
+        case .asEntered:
+            _toDos = Query()
+        case .alphabetical:
+            _toDos = Query(sort: \.item, animation: .default)
+        case .chronological:
+            _toDos = Query(sort: \.dueDate)
+        case .completed:
+            _toDos = Query(filter: #Predicate { $0.isCompleted == false })
+        }
+    }
+    
     var body: some View {
-        NavigationStack {
-            List {
-                ForEach(toDosVM.toDos) { toDo in
+        List {
+            ForEach(toDos) { toDo in
+                VStack(alignment: .leading) {
                     HStack {
                         Image(systemName: toDo.isCompleted ? "checkmark.rectangle" : "rectangle")
+                            .onTapGesture {
+                                toDo.isCompleted.toggle()
+                            }
                         
                         NavigationLink {
                             DetailView(toDo: toDo)
@@ -26,17 +52,36 @@ struct ToDoListView: View {
                         }
                     }
                     .font(.title2)
+                    HStack {
+                        Text(toDo.dueDate.formatted(date: .abbreviated, time: .shortened))
+                            .foregroundStyle(.secondary)
+                        if toDo.reminderIsOn {
+                            Image(systemName: "calendar.badge.clock")
+                                .symbolRenderingMode(.multicolor)
+                        }
+                    }
                 }
-                .onDelete(perform: toDosVM.deleteToDo)
-                .onMove  (perform: toDosVM.moveToDo)
+                .swipeActions {
+                    Button("Delete", role: .destructive) {
+                        modelContext.delete(toDo)
+                    }
+                }
             }
+        }
+        .listStyle(.plain)
+    }
+}
+
+struct ToDoListView: View {
+    @State private var sheetIsPresented = false
+    @State private var sortSelection: SortOption = .asEntered
+    
+    var body: some View {
+        NavigationStack {
+            sortedToDoList(sortSelection: sortSelection)
             .navigationTitle("To Do List")
             .navigationBarTitleDisplayMode(.automatic)
-            .listStyle(.plain)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    EditButton()
-                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         sheetIsPresented.toggle()
@@ -44,20 +89,24 @@ struct ToDoListView: View {
                         Image(systemName: "plus")
                     }
                 }
+                ToolbarItem(placement: .bottomBar) {
+                    Picker("", selection: $sortSelection) {
+                        ForEach(SortOption.allCases, id: \.self) { sortOrder in
+                            Text(sortOrder.rawValue)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
             }
             .sheet(isPresented: $sheetIsPresented) {
                 NavigationStack {
                     DetailView(toDo: ToDo())
                 }
             }
-//            .fullScreenCover(isPresented: $sheetIsPresented) {
-//                DetailView(passedValue: "")
-//            }
         }
     }
 }
 
 #Preview {
     ToDoListView()
-        .environmentObject(ToDosViewModel())
 }
